@@ -1,0 +1,97 @@
+from qiskit import *
+from qiskit.visualization import *
+from qiskit.tools.monitor import *
+
+circuit=QuantumCircuit(1,1) #We are using one qubit and one classical bit.
+
+circuit.h(0) # applying the H gate
+
+circuit.measure(range(1),range(1)) #measuring the states
+
+circuit.draw(output='mpl') # drawing the circuit
+
+
+print(circuit.qasm()) #obtaining QASM code
+
+
+# Executing on a local simulator
+
+backend_sim=Aer.get_backend('qasm_simulator') # choosing backend
+
+job_sim=execute(circuit,backend_sim,shots=1024) # executing the circuit and selecting no.of repetitions
+
+result_sim=job_sim.result() #collecting results
+
+counts=result_sim.get_counts(circuit) #otaining the frequency of each result
+
+print(counts)
+
+plot_histogram(counts)
+
+
+# Execution to get statevector
+
+circuit2 = QuantumCircuit(1,1)
+
+circuit2.h(0)
+
+backend= Aer.get_backend('statevector_simulator') # changing the backend
+
+job = execute(circuit2,backend) # executing the circuit in the new simulator, we don't need repetitions.
+
+result=job.result()
+
+outputstate =result.get_statevector(circuit2)
+
+print(outputstate)
+
+
+# obtaing transformation matrices
+backend = Aer.get_backend('unitary_simulator') # changing the backend
+
+job=execute(circuit2,backend) # executing the circuit
+
+results= job.result() # obtaing results
+
+unitary= results.get_unitary() # getting transformation matrix
+
+print(unitary)
+
+#Executing on a IBM Q Expereince
+
+IBMQ.save_account('')
+provider =IBMQ.load_account() # loading account
+
+provider.backends() # retriving backend to check their status
+
+for b in provider.backends():
+
+#Executing on IBM Q experience simulator
+
+backend_sim=provider.get_backend('ibmq_qasm_simulator') # choosing backend
+
+job_sim=execute(circuit,backend_sim,shots=1024) # executing circuit and selecting repetitions
+
+result_sim=job_sim.result() #collecting results
+
+counts = result_sim.get_counts(circuit) # obtaining the frequency of each result
+
+print(counts)
+
+plot_histogram(counts)
+
+
+# Executing on a real quantum computer
+
+backend=provider.get_backend('imbq_armonk')
+
+job_exp=execute(circuit,backend=backend)
+
+job_monitor(job_exp)
+
+result_exp=job_exp.result()
+
+counts_exp=result_exp.get_counts(circuit)
+
+plot_histogram([counts_exp,counts],legend=['Device','simulator'])
+    print(b.status().to_dict())
