@@ -1,0 +1,71 @@
+from qiskit import *
+from qiskit.visualization import *
+from qiskit.tools.monitor import *
+
+n=4 #Number of qubits that we are going to use
+
+q= QuantumRegister(n,'q') #The oracle qubits
+out=QuantumRegister(1,"out")#last qubit
+c=ClassicalRegister(n,"c") #Classical bits needed for the result measument
+
+circ_init = QuantumCircuit(q,out,c) #Intial part of the circuit
+
+for i in range(n):
+    circ_init.h(q[i]) # apply H gate to oracle qubits
+    
+circ_init.x(out) #we apply X and H to output qubit
+circ_init.h(out)
+
+circ_init.barrier() # visual barrier to seperate the part of the circuit
+
+circ_init.draw(output='mpl')
+
+circ_end = QuantumCircuit(q,out,c)
+
+circ_end.barrier() # visual barrier to seperate parts
+
+for i in range(n):
+    circ_end.h(q[i]) # applying H gates
+    
+circ_end.measure(q,c)
+
+circ_end.draw(output='mpl')
+
+#oracle for a boolean funtion that always returns 1
+
+const = QuantumCircuit(q,out,c)
+
+const.cx(q[0],out)
+
+const.x(q[0])
+
+const.cx(q[0],out)
+
+const.x(q[0])
+
+const.draw(output='mpl')
+
+# oracle for a boolean function that returns 1 for half and 0 for half of the inputs
+
+bal = QuantumCircuit(q,out,c)
+
+bal.cx(q[0],out)
+
+bal.draw(output='mpl')
+
+circ_const=circ_init+const+circ_end
+circ_const.draw(output='mpl')
+
+backend=Aer.get_backend('qasm_simulator')
+job=execute(circ_const,backend,shots=10)
+counts=job.result().get_counts()
+print(counts)
+
+circ_bal=circ_init+bal+circ_end
+circ_bal.draw(output='mpl')
+
+backend=Aer.get_backend('qasm_simulator')
+job=execute(circ_bal,backend,shots=10)
+counts=job.result().get_counts()
+print(counts)
+
